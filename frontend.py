@@ -135,10 +135,16 @@ if st.session_state.generating and not st.session_state.get("stop_generation", F
         for chunk, metadata in workflow.stream({"messages": history}, stream_mode="messages"):
             if st.session_state.get("stop_generation", False):
                 break
-            if chunk.content:
-                full_response += chunk.content
-                placeholder.markdown(full_response + "▌")
-                
+            # Only process chunks from the assistant node (not raw tool results)
+            node = metadata.get("langgraph_node", "")
+            if node == "assistant":
+                if hasattr(chunk, "tool_calls") and chunk.tool_calls:
+                    tool_name = chunk.tool_calls[0].get("name", "tool")
+                    placeholder.markdown(f"🔧 *Using tool: `{tool_name}`...*")
+                elif chunk.content:
+                    full_response += chunk.content
+                    placeholder.markdown(full_response + "▌")
+
         placeholder.markdown(full_response)
         
     # Save assistant message and reset states
