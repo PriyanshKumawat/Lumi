@@ -59,9 +59,18 @@ load_dotenv()
 
 DEV_GROQ_API_KEY: str = os.environ["GROQ_API_KEY"]          # Your dev Groq key (trial mode)
 FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
-ALLOWED_ORIGINS: list[str] = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:3000"
-).split(",")
+
+# Build allowed origins list from ALLOWED_ORIGINS env var (comma-separated).
+# Always ensure FRONTEND_URL is included even if ALLOWED_ORIGINS isn't set.
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+ALLOWED_ORIGINS: list[str] = (
+    [o.strip() for o in _raw_origins.split(",") if o.strip()]
+    if _raw_origins
+    else ["http://localhost:3000"]
+)
+# Guarantee the explicit FRONTEND_URL is always in the list
+if FRONTEND_URL and FRONTEND_URL not in ALLOWED_ORIGINS:
+    ALLOWED_ORIGINS.append(FRONTEND_URL)
 
 # Default model for trial users
 TRIAL_MODEL = "llama-3.1-8b-instant"
