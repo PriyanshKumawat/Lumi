@@ -12,7 +12,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SUPABASE_URL: str = os.environ["SUPABASE_URL"]
-SUPABASE_SERVICE_KEY: str = os.environ["SUPABASE_SERVICE_KEY"]
+# Accept both naming conventions so Render env vars work regardless of which name was set
+SUPABASE_SERVICE_KEY: str = (
+    os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    or os.environ.get("SUPABASE_SERVICE_KEY")
+    or ""
+)
+if not SUPABASE_SERVICE_KEY:
+    raise RuntimeError(
+        "Missing Supabase service key. "
+        "Set SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) in your Render environment variables."
+    )
 
 # Use the SERVICE ROLE key on the backend so RLS policies don't block
 # server-side operations. This key must NEVER be exposed to the frontend.
